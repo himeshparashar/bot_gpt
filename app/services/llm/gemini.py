@@ -10,9 +10,8 @@ from app.core.config import settings
 
 
 class GeminiProvider(BaseLLMProvider):
-    """Gemini LLM provider implementation"""
     
-    def __init__(self, model: str = "gemini-1.5-flash"):
+    def __init__(self, model: str = "gemini-2.5-flash"):
         self.model = model
         self.client = ChatGoogleGenerativeAI(
             model=model,

@@ -1,19 +1,23 @@
-version: '3.8'
-
 services:
   app:
     build: .
+    container_name: bot_gpt_app
     ports:
       - "8000:8000"
     env_file:
       - .env
+    environment:
+      - POSTGRES_HOST=db
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - .:/app
+    restart: unless-stopped
 
   db:
     image: postgres:15
+    container_name: bot_gpt_db
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -22,6 +26,12 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bot_gpt"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
 volumes:
   postgres_data:
