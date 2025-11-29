@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     # API Keys
     OPENAI_API_KEY: Optional[str] = None
     GROQ_API_KEY: Optional[str] = None
+    GOOGLE_API_KEY: Optional[str] = None
     
     # Database
     DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/bot_gpt"
