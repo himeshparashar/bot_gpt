@@ -45,7 +45,7 @@ def db_session() -> Generator[Session, None, None]:
 @pytest.fixture
 def sample_conversation(db_session: Session) -> Conversation:
     """Create a sample conversation for testing"""
-    conversation = Conversation(title="Test Conversation")
+    conversation = Conversation(user_id="test-user-123", title="Test Conversation")
     db_session.add(conversation)
     db_session.commit()
     db_session.refresh(conversation)
@@ -58,7 +58,8 @@ def sample_message(db_session: Session, sample_conversation: Conversation) -> Me
     message = Message(
         conversation_id=sample_conversation.id,
         role=MessageRole.USER,
-        content="Hello, this is a test message"
+        content="Hello, this is a test message",
+        sequence_number=1
     )
     db_session.add(message)
     db_session.commit()

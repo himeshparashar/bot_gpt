@@ -12,29 +12,31 @@ class TestConversationModel:
     
     def test_create_conversation(self, db_session: Session):
         """Test creating a new conversation"""
-        conversation = Conversation(title="Test Conversation")
+        conversation = Conversation(user_id="test-user-123", title="Test Conversation")
         db_session.add(conversation)
         db_session.commit()
         db_session.refresh(conversation)
         
         assert conversation.id is not None
         assert conversation.title == "Test Conversation"
+        assert conversation.user_id == "test-user-123"
         assert conversation.created_at is not None
         assert conversation.updated_at is not None
     
     def test_create_conversation_without_title(self, db_session: Session):
         """Test creating a conversation without a title (nullable)"""
-        conversation = Conversation()
+        conversation = Conversation(user_id="test-user-123")
         db_session.add(conversation)
         db_session.commit()
         db_session.refresh(conversation)
         
         assert conversation.id is not None
         assert conversation.title is None
+        assert conversation.user_id == "test-user-123"
     
     def test_conversation_generates_uuid(self, db_session: Session):
         """Test that conversation ID is auto-generated as UUID"""
-        conversation = Conversation(title="UUID Test")
+        conversation = Conversation(user_id="test-user-123", title="UUID Test")
         db_session.add(conversation)
         db_session.commit()
         
@@ -44,7 +46,7 @@ class TestConversationModel:
     
     def test_conversation_messages_relationship(self, db_session: Session):
         """Test the relationship between conversation and messages"""
-        conversation = Conversation(title="Relationship Test")
+        conversation = Conversation(user_id="test-user-123", title="Relationship Test")
         db_session.add(conversation)
         db_session.commit()
         
@@ -52,12 +54,14 @@ class TestConversationModel:
         message1 = Message(
             conversation_id=conversation.id,
             role=MessageRole.USER,
-            content="Hello"
+            content="Hello",
+            sequence_number=1
         )
         message2 = Message(
             conversation_id=conversation.id,
             role=MessageRole.ASSISTANT,
-            content="Hi there!"
+            content="Hi there!",
+            sequence_number=2
         )
         db_session.add_all([message1, message2])
         db_session.commit()
@@ -68,7 +72,7 @@ class TestConversationModel:
     
     def test_cascade_delete_messages(self, db_session: Session):
         """Test that deleting a conversation also deletes its messages"""
-        conversation = Conversation(title="Cascade Delete Test")
+        conversation = Conversation(user_id="test-user-123", title="Cascade Delete Test")
         db_session.add(conversation)
         db_session.commit()
         
@@ -76,7 +80,8 @@ class TestConversationModel:
         message = Message(
             conversation_id=conversation.id,
             role=MessageRole.USER,
-            content="Test message"
+            content="Test message",
+            sequence_number=1
         )
         db_session.add(message)
         db_session.commit()
@@ -100,7 +105,8 @@ class TestMessageModel:
         message = Message(
             conversation_id=sample_conversation.id,
             role=MessageRole.USER,
-            content="Test message content"
+            content="Test message content",
+            sequence_number=1
         )
         db_session.add(message)
         db_session.commit()
@@ -110,17 +116,19 @@ class TestMessageModel:
         assert message.conversation_id == sample_conversation.id
         assert message.role == MessageRole.USER
         assert message.content == "Test message content"
+        assert message.sequence_number == 1
         assert message.created_at is not None
     
     def test_message_roles(self, db_session: Session, sample_conversation: Conversation):
         """Test different message roles"""
         roles = [MessageRole.USER, MessageRole.ASSISTANT, MessageRole.SYSTEM]
         
-        for role in roles:
+        for i, role in enumerate(roles):
             message = Message(
                 conversation_id=sample_conversation.id,
                 role=role,
-                content=f"Message with role {role.value}"
+                content=f"Message with role {role.value}",
+                sequence_number=i + 1
             )
             db_session.add(message)
             db_session.commit()
@@ -133,7 +141,8 @@ class TestMessageModel:
         message = Message(
             conversation_id=sample_conversation.id,
             role=MessageRole.USER,
-            content="Relationship test"
+            content="Relationship test",
+            sequence_number=1
         )
         db_session.add(message)
         db_session.commit()
@@ -148,7 +157,8 @@ class TestMessageModel:
         message = Message(
             conversation_id=sample_conversation.id,
             role=MessageRole.USER,
-            content="UUID test"
+            content="UUID test",
+            sequence_number=1
         )
         db_session.add(message)
         db_session.commit()

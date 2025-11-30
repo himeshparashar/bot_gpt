@@ -18,11 +18,12 @@ class TestConversationRepository:
     
     def test_create_conversation(self, db_session: Session, repo: ConversationRepository):
         """Test creating a conversation through repository"""
-        conversation = repo.create(db_session, {"title": "New Conversation"})
+        conversation = repo.create(db_session, {"user_id": "test-user-123", "title": "New Conversation"})
         
         assert conversation is not None
         assert conversation.id is not None
         assert conversation.title == "New Conversation"
+        assert conversation.user_id == "test-user-123"
     
     def test_get_conversation_by_id(self, db_session: Session, repo: ConversationRepository, sample_conversation: Conversation):
         """Test retrieving a conversation by ID"""
@@ -41,9 +42,9 @@ class TestConversationRepository:
     def test_get_all_conversations(self, db_session: Session, repo: ConversationRepository):
         """Test retrieving all conversations"""
         # Create multiple conversations
-        repo.create(db_session, {"title": "Conversation 1"})
-        repo.create(db_session, {"title": "Conversation 2"})
-        repo.create(db_session, {"title": "Conversation 3"})
+        repo.create(db_session, {"user_id": "test-user-123", "title": "Conversation 1"})
+        repo.create(db_session, {"user_id": "test-user-123", "title": "Conversation 2"})
+        repo.create(db_session, {"user_id": "test-user-123", "title": "Conversation 3"})
         
         conversations = repo.get_all(db_session)
         
@@ -53,7 +54,7 @@ class TestConversationRepository:
         """Test pagination when retrieving conversations"""
         # Create 5 conversations
         for i in range(5):
-            repo.create(db_session, {"title": f"Conversation {i+1}"})
+            repo.create(db_session, {"user_id": "test-user-123", "title": f"Conversation {i+1}"})
         
         # Get first 2
         first_page = repo.get_all(db_session, skip=0, limit=2)
