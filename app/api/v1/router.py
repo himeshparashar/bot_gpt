@@ -4,7 +4,7 @@ v1 for versioning
 """
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import chat, conversations, documents
+from app.api.v1.endpoints import conversations, documents
 
 api_router = APIRouter()
 
