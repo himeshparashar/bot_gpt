@@ -1,24 +1,24 @@
-fastapi==0.109.0
-uvicorn==0.27.0
-pydantic==2.5.3
-pydantic-settings==2.1.0
-sqlalchemy==2.0.25
-psycopg2-binary==2.9.9
-python-dotenv==1.0.0
-openai==1.10.0
-httpx==0.26.0
-python-multipart==0.0.6
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+sqlalchemy
+psycopg2-binary
+python-dotenv
+openai
+httpx
+python-multipart
 
 # LangChain
-langchain==0.3.12
-langchain-core==0.3.25
-langchain-text-splitters==0.3.3
-langchain-community==0.3.12
-langchain-google-genai==2.0.7
-langchain-openai==0.2.14
+langchain
+langchain-core
+langchain-text-splitters
+langchain-community
+langchain-google-genai
+langchain-openai
 
 # Vector Store
-chromadb==0.4.22
+chromadb
 
 # PDF Processing
-pypdf==4.0.1
+pypdf
