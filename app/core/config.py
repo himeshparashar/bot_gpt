@@ -33,9 +33,17 @@ class Settings(BaseSettings):
     MAX_RESPONSE_TOKENS: int = 1024
     SLIDING_WINDOW_MESSAGES: int = 20
     
+    # Vector Store
+    CHROMA_PERSIST_DIR: str = "./chroma_db"
+    
+    # Chunking
+    CHUNK_SIZE: int = 1000
+    CHUNK_OVERLAP: int = 200
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"
 
 
 settings = Settings()
