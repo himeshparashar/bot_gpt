@@ -8,6 +8,7 @@ from app.services.llm.groq import GroqProvider
 from app.services.llm.openai import OpenAIProvider
 from app.services.context_manager import ContextManager, ContextWindowStrategy, create_context_manager
 from app.services.prompt_manager import PromptManager, PromptType, prompt_manager
+from app.services.rag_service import RAGService, rag_service
 from app.repositories.conversation import ConversationRepository, MessageRepository
 from app.models.conversation import Conversation, Message, MessageRole, ConversationMode
 from app.schemas.chat import (
@@ -79,12 +80,14 @@ class ChatService:
         llm_provider: Optional[BaseLLMProvider] = None,
         context_manager: Optional[ContextManager] = None,
         prompt_mgr: Optional[PromptManager] = None,
+        rag_svc: Optional[RAGService] = None,
     ):
         self.conversation_repo = conversation_repo or ConversationRepository()
         self.message_repo = message_repo or MessageRepository()
         self._llm_provider = llm_provider
         self.context_manager = context_manager or create_context_manager()
         self.prompt_manager = prompt_mgr or prompt_manager
+        self.rag_service = rag_svc or rag_service
     
     @property
     def llm_provider(self) -> BaseLLMProvider:
@@ -129,7 +132,12 @@ class ChatService:
                 token_count=user_token_count
             )
             
-            system_prompt = self._get_system_prompt_for_mode(conv_mode)
+            # Get system prompt - with document context for RAG mode
+            if conv_mode == ConversationMode.RAG:
+                document_context = await self.rag_service.retrieve_context(request.message)
+                system_prompt = self._get_system_prompt_for_mode(conv_mode, document_context=document_context)
+            else:
+                system_prompt = self._get_system_prompt_for_mode(conv_mode)
             
             messages_for_llm = self._build_llm_messages(
                 messages=[user_message],
@@ -188,7 +196,12 @@ class ChatService:
                 token_count=user_token_count
             )
             
-            system_prompt = self._get_system_prompt_for_mode(conversation.mode)
+            # Get system prompt - with document context for RAG mode
+            if conversation.mode == ConversationMode.RAG:
+                document_context = await self.rag_service.retrieve_context(request.message)
+                system_prompt = self._get_system_prompt_for_mode(conversation.mode, document_context=document_context)
+            else:
+                system_prompt = self._get_system_prompt_for_mode(conversation.mode)
             
             all_messages = existing_messages + [user_message]
             messages_for_llm = self._build_llm_messages(
@@ -284,11 +297,21 @@ class ChatService:
         """
         message_dicts = [msg.to_llm_format() for msg in messages]
         
+        # Debug logging
+        if system_prompt:
+            logger.debug(f"System prompt length: {len(system_prompt)} chars")
+            logger.debug(f"System prompt preview: {system_prompt[:200]}...")
+        
         context = self.context_manager.build_context(
             messages=message_dicts,
             system_prompt=system_prompt,
             strategy=ContextWindowStrategy.SLIDING_WINDOW
         )
+        
+        # Log what's being sent to LLM
+        logger.info(f"Sending {len(context)} messages to LLM")
+        for i, msg in enumerate(context):
+            logger.debug(f"Message {i}: role={msg.get('role')}, content_length={len(msg.get('content', ''))}")
         
         return context
     

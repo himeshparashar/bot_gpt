@@ -2,7 +2,11 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Optional
 from dataclasses import dataclass
 from enum import Enum
+import logging
 import tiktoken
+
+
+logger = logging.getLogger(__name__)
 
 
 class TokenCounterStrategy(ABC):
@@ -69,7 +73,7 @@ class ContextConfig:
     max_context_tokens: int = 4096  
     max_response_tokens: int = 1024  
     sliding_window_messages: int = 20  
-    system_prompt_token_budget: int = 500  
+    system_prompt_token_budget: int = 2000  # Increased for RAG document context  
 
 class ContextWindowStrategy(Enum):
     """Strategies for handling context window limits"""
@@ -136,9 +140,27 @@ class ContextManager:
             system_message = {"role": "system", "content": system_prompt}
             system_tokens = self.token_counter.count_messages_tokens([system_message])
             
-            if system_tokens <= self.config.system_prompt_token_budget:
+            # Always include system prompt if it fits in available context
+            # For RAG mode, the system prompt includes document context and can be larger
+            if system_tokens <= available_tokens:
                 context.append(system_message)
                 available_tokens -= system_tokens
+                logger.debug(f"Added system prompt with {system_tokens} tokens")
+            else:
+                logger.warning(
+                    f"System prompt too large ({system_tokens} tokens) for available context "
+                    f"({available_tokens} tokens). System prompt will be truncated."
+                )
+                # Truncate system prompt to fit
+                truncated_content = self._truncate_to_fit(
+                    system_prompt, 
+                    available_tokens - 10  # Leave room for message overhead
+                )
+                if truncated_content:
+                    system_message = {"role": "system", "content": truncated_content}
+                    system_tokens = self.token_counter.count_messages_tokens([system_message])
+                    context.append(system_message)
+                    available_tokens -= system_tokens
         
         if strategy == ContextWindowStrategy.SLIDING_WINDOW:
             context.extend(self._apply_sliding_window(messages, available_tokens))
@@ -149,6 +171,24 @@ class ContextManager:
             context.extend(self._apply_sliding_window(messages, available_tokens))
         
         return context
+    
+    def _truncate_to_fit(self, text: str, max_tokens: int) -> str:
+        """Truncate text to fit within token limit"""
+        if max_tokens <= 0:
+            return ""
+        
+        # Binary search for the right length
+        low, high = 0, len(text)
+        while low < high:
+            mid = (low + high + 1) // 2
+            truncated = text[:mid]
+            tokens = self.token_counter.count_tokens(truncated)
+            if tokens <= max_tokens:
+                low = mid
+            else:
+                high = mid - 1
+        
+        return text[:low]
     
     def _apply_sliding_window(
         self, 
