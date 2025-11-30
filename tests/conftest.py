@@ -1,6 +1,8 @@
 """
 Pytest Configuration and Fixtures
 """
+from typing import Generator
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
@@ -23,7 +25,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engin
 
 
 @pytest.fixture(scope="function")
-def db_session() -> Session:
+def db_session() -> Generator[Session, None, None]:
     """
     Create a fresh database session for each test.
     Tables are created before each test and dropped after.
