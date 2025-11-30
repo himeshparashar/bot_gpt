@@ -1,7 +1,7 @@
 """
 RAG Service - Retrieval Augmented Generation
 """
-from typing import List, Optional
+from typing import List
 
 
 class RAGService:

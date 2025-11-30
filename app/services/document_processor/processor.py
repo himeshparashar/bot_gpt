@@ -1,7 +1,5 @@
 from typing import Tuple
-from io import BytesIO
-from langchain_community.document_loaders import PyPDFLoader, TextLoader
-from langchain_community.document_loaders.base import BaseLoader
+from langchain_community.document_loaders import PyPDFLoader
 import tempfile
 import os
 

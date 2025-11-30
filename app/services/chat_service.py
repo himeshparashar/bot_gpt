@@ -1,7 +1,7 @@
 """
 Chat Service - Orchestrates LLM and Database Operations
 """
-from typing import List, Optional
+from typing import List
 
 from app.schemas.chat import ChatRequest, ChatResponse
 
