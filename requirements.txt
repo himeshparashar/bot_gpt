@@ -9,6 +9,10 @@ openai
 httpx
 python-multipart
 
+# Testing
+pytest
+pytest-cov
+
 # LangChain
 langchain
 langchain-core
