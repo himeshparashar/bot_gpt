@@ -1,5 +1,6 @@
 import uuid
 from dataclasses import dataclass
+from typing import Optional
 
 from app.core.config import settings
 from app.services.embeddings import EmbeddingFactory, BaseEmbeddingProvider
@@ -27,15 +28,29 @@ class IngestionService:
         chunk_size: int = None,
         chunk_overlap: int = None
     ):
-        self._embedding_provider = embedding_provider or EmbeddingFactory.create()
-        self._vector_store = vector_store or VectorStoreFactory.create()
+        # Lazy initialization - don't create providers if not explicitly passed
+        self._embedding_provider = embedding_provider
+        self._vector_store = vector_store
         self._document_processor = DocumentProcessor()
         self._chunker = TextChunker(
             chunk_size=chunk_size or settings.CHUNK_SIZE,
             chunk_overlap=chunk_overlap or settings.CHUNK_OVERLAP
         )
+        self._initialized = embedding_provider is not None and vector_store is not None
+    
+    def _ensure_initialized(self):
+        """Lazy initialization of embedding provider and vector store"""
+        if not self._initialized:
+            if self._embedding_provider is None:
+                self._embedding_provider = EmbeddingFactory.create()
+                if self._embedding_provider is None:
+                    raise ValueError("No API key configured for embedding provider. Set GOOGLE_API_KEY or OPENAI_API_KEY.")
+            if self._vector_store is None:
+                self._vector_store = VectorStoreFactory.create()
+            self._initialized = True
     
     async def ingest(self, content: bytes, filename: str, content_type: str) -> IngestionResult:
+        self._ensure_initialized()
         document_id = str(uuid.uuid4())
         
         text, file_type = await self._document_processor.process(content, filename, content_type)
@@ -79,6 +94,7 @@ class IngestionService:
         )
     
     async def delete_document(self, document_id: str) -> bool:
+        self._ensure_initialized()
         return await self._vector_store.delete_by_document_id(document_id)
 
 

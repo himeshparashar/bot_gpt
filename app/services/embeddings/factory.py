@@ -24,6 +24,8 @@ class EmbeddingFactory:
     def create(cls, provider_type: EmbeddingProviderType = None) -> BaseEmbeddingProvider:
         if provider_type is None:
             provider_type = cls._get_default_provider()
+            if provider_type is None:
+                return None
         
         provider_class = cls._providers.get(provider_type)
         if not provider_class:
@@ -37,4 +39,4 @@ class EmbeddingFactory:
             return EmbeddingProviderType.GEMINI
         if settings.OPENAI_API_KEY:
             return EmbeddingProviderType.OPENAI
-        raise ValueError("No API key configured for any embedding provider")
+        return None  # No API key configured, return None instead of raising
