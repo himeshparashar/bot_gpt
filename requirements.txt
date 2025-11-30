@@ -1,28 +1,38 @@
+# FastAPI & Server
 fastapi
-uvicorn
+uvicorn[standard]
+
+# Pydantic & Settings
 pydantic
 pydantic-settings
+python-dotenv
+
+# Database
 sqlalchemy
 psycopg2-binary
-python-dotenv
-openai
+
+# HTTP & Multipart
 httpx
 python-multipart
 
-# Testing
-pytest
-pytest-cov
-
-# LangChain
+# LLM Providers
+openai
 langchain
 langchain-core
-langchain-text-splitters
 langchain-community
 langchain-google-genai
 langchain-openai
+langchain-text-splitters
 
 # Vector Store
 chromadb
 
-# PDF Processing
+# Tokenization
+tiktoken
+
+# Additional
 pypdf
+
+# Testing
+pytest
+pytest-cov
